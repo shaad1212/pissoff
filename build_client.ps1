@@ -3,18 +3,20 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$clientPath = Join-Path $PSScriptRoot "client.py"
-$pythonPath = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+$versionPath = Join-Path $PSScriptRoot "client_features\core.py"
+$windowsPythonPath = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+$linuxPythonPath = Join-Path $PSScriptRoot ".venv/bin/python"
+$pythonPath = if (Test-Path $windowsPythonPath) { $windowsPythonPath } else { $linuxPythonPath }
 
 if (-not (Test-Path $pythonPath)) {
     throw "Virtual environment Python was not found at $pythonPath"
 }
 
-$clientSource = [System.IO.File]::ReadAllText($clientPath)
+$clientSource = [System.IO.File]::ReadAllText($versionPath)
 $versionPattern = '(?m)^APP_VERSION = "(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d{2})"\r?$'
 $versionMatch = [regex]::Match($clientSource, $versionPattern)
 if (-not $versionMatch.Success) {
-    throw "Could not find a semantic APP_VERSION in client.py"
+    throw "Could not find a semantic APP_VERSION in client_features/core.py"
 }
 
 $versionParts = @(
@@ -37,7 +39,7 @@ if (-not $SkipVersionBump) {
     $replacement = 'APP_VERSION = "{0}"' -f $nextVersion
     $updatedSource = [regex]::Replace($clientSource, $versionPattern, $replacement, 1)
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($clientPath, $updatedSource, $utf8NoBom)
+    [System.IO.File]::WriteAllText($versionPath, $updatedSource, $utf8NoBom)
     Write-Host "Client version: $currentVersion -> $nextVersion"
 } else {
     Write-Host "Client version: $currentVersion"
