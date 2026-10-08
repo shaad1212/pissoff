@@ -38,7 +38,7 @@ jobs:
       - name: Upload executable
         uses: actions/upload-artifact@v4
         with:
-          name: KeyboardService-windows
+          name: KeyboardService
           path: dist/KeyboardService.exe
           if-no-files-found: error
 
